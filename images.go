@@ -6,24 +6,25 @@ import (
 	_ "image/png"
 	"strconv"
 	"time"
-	"flag" // 添
-    "io/ioutil" 
-    "log" 
+	"flag" // 若需自定义字体需添加L9-11
+    	"io/ioutil" 
+    	"log" 
 
 	"github.com/fogleman/gg"
 	"github.com/gin-gonic/gin"
 	// "golang.org/x/image/font/inconsolata"
-	"github.com/golang/freetype/truetype"
+	"github.com/golang/freetype/truetype"// 若需添加自定义字体需添加本行
 )
 
-var ( // 添
-	fontfile = flag.String("fontfile", "msyh.ttc", "filename of the ttf font")
+// 若需添加自定义字体需添加L20-24
+var ( 
+	fontfile = flag.String("fontfile", "msyh.ttc", "filename of the ttf font") // 支持自定义字体，请将ttf/ttc文件放入同文件夹下，并将这里的msyh.ttc修改成你的字体文件名，支持中文
 	dpi      = flag.Float64("dpi", 72, "screen resolution in Dots Per Inch")  
-    size     = flag.Float64("size", 16, "font size in points")	
+    	size     = flag.Float64("size", 16, "font size in points")	
 )
 
 const (
-	imageWidth  = 400 //325
+	imageWidth  = 400 // 此项进行过修改。源文件为宽度325，可自行修改，但请注意过小的值可能导致字数显示不全
 	imageHeight = 64
 )
 
@@ -56,16 +57,16 @@ func respondServerImage(c *gin.Context) {
 		serverDisp = title
 	}
 	
-	// 59-73添
+	// 需要自定义字体请添加L60-74
 	fontBytes, err := ioutil.ReadFile(*fontfile) 
-    if err != nil { 
-        log.Println(err) 
-        return 
-    } 
+    	if err != nil { 
+        	log.Println(err) 
+        	return 
+    	} 
 	font, err := truetype.Parse(fontBytes)
 	if err != nil {
-        log.Println(err) 
-        return 
+       		log.Println(err) 
+        	return 
 	}
 	face := truetype.NewFace(font, &truetype.Options{
 		Size: *size,
@@ -77,8 +78,8 @@ func respondServerImage(c *gin.Context) {
 	if status == nil {
 		dc := gg.NewContext(imageWidth, imageHeight)
 
-		// dc.SetFontFace(inconsolata.Regular8x16)
-		dc.SetFontFace(face)
+		// dc.SetFontFace(inconsolata.Regular8x16) 源字体请去掉本行注释并注释下一行
+		dc.SetFontFace(face)// 需自定义字体请添加本行
 		if theme == "dark" {
 			dc.SetRGB(1, 1, 1)
 		} else {
@@ -117,8 +118,9 @@ func respondServerImage(c *gin.Context) {
 
 	dc.DrawImage(imgToDraw, (imageBlockWidth-width)/2, (imageHeight-height)/2)
 
-	// dc.SetFontFace(inconsolata.Regular8x16)
-	dc.SetFontFace(face)
+	// dc.SetFontFace(inconsolata.Regular8x16) 源字体请去掉本行注释并注释下一行
+	dc.SetFontFace(face)// 需自定义字体请添加本行
+	// 以下无自定义字体内容，但可修改翻译内容
 	if theme == "dark" {
 		dc.SetRGB(1, 1, 1)
 	} else {
