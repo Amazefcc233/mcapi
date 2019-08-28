@@ -6,14 +6,24 @@ import (
 	_ "image/png"
 	"strconv"
 	"time"
+	"flag" // 添
+    "io/ioutil" 
+    "log" 
 
 	"github.com/fogleman/gg"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/image/font/inconsolata"
+	// "golang.org/x/image/font/inconsolata"
+	"github.com/golang/freetype/truetype"
+)
+
+var ( // 添
+	fontfile = flag.String("fontfile", "msyh.ttc", "filename of the ttf font")
+	dpi      = flag.Float64("dpi", 72, "screen resolution in Dots Per Inch")  
+    size     = flag.Float64("size", 16, "font size in points")	
 )
 
 const (
-	imageWidth  = 325
+	imageWidth  = 400 //325
 	imageHeight = 64
 )
 
@@ -45,13 +55,30 @@ func respondServerImage(c *gin.Context) {
 	if title != "" {
 		serverDisp = title
 	}
+	
+	// 59-73添
+	fontBytes, err := ioutil.ReadFile(*fontfile) 
+    if err != nil { 
+        log.Println(err) 
+        return 
+    } 
+	font, err := truetype.Parse(fontBytes)
+	if err != nil {
+        log.Println(err) 
+        return 
+	}
+	face := truetype.NewFace(font, &truetype.Options{
+		Size: *size,
+		DPI:*dpi,
+	}) 
 
 	status := getStatusFromCacheOrUpdate(serverAddr, c, true)
 
 	if status == nil {
 		dc := gg.NewContext(imageWidth, imageHeight)
 
-		dc.SetFontFace(inconsolata.Regular8x16)
+		// dc.SetFontFace(inconsolata.Regular8x16)
+		dc.SetFontFace(face)
 		if theme == "dark" {
 			dc.SetRGB(1, 1, 1)
 		} else {
@@ -90,7 +117,8 @@ func respondServerImage(c *gin.Context) {
 
 	dc.DrawImage(imgToDraw, (imageBlockWidth-width)/2, (imageHeight-height)/2)
 
-	dc.SetFontFace(inconsolata.Regular8x16)
+	// dc.SetFontFace(inconsolata.Regular8x16)
+	dc.SetFontFace(face)
 	if theme == "dark" {
 		dc.SetRGB(1, 1, 1)
 	} else {
@@ -104,9 +132,9 @@ func respondServerImage(c *gin.Context) {
 	var online string
 
 	if status.Online {
-		online = "Online!"
+		online = "在线!"
 	} else {
-		online = "Offline"
+		online = "离线"
 	}
 
 	tW, tH := dc.MeasureString(online)
@@ -115,7 +143,7 @@ func respondServerImage(c *gin.Context) {
 	lastHeight += tH + 2
 
 	if status.Online {
-		msg := fmt.Sprintf("%d/%d players", status.Players.Now, status.Players.Max)
+		msg := fmt.Sprintf("    %d/%d 玩家", status.Players.Now, status.Players.Max)
 		_, tH = dc.MeasureString(msg)
 		dc.DrawString(msg, float64(width+fromImage*2)+tW, lastHeight)
 	}
@@ -129,7 +157,7 @@ func respondServerImage(c *gin.Context) {
 		plural = "s"
 	}
 
-	msg := fmt.Sprintf("Updated %d min%s ago · mcapi.us", minutesAgo, plural)
+	msg := fmt.Sprintf("数据于 %d min%s 前更新 • 代码源自 mcapi.us", minutesAgo, plural)
 
 	dc.DrawString(msg, offsetText, imageHeight-4)
 
